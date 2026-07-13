@@ -1,0 +1,142 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      snappyHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+castellatedMesh true;
+snap            true;
+addLayers       false; // Keep false to run fast and stable, using refined wall function grid
+
+geometry
+{
+    wing.stl
+    {
+        type triSurfaceMesh;
+        name wing;
+    }
+    
+    // Near-wing refinement box
+    refinementBox
+    {
+        type searchableBox;
+        min (-0.5 -0.6 -0.1);
+        max ( 1.5  0.6  0.1);
+    }
+    
+    // Wake refinement cone/box
+    wakeBox
+    {
+        type searchableBox;
+        min ( 1.0 -1.0 -0.1);
+        max ( 4.0  0.6  0.1);
+    }
+};
+
+castellatedMeshControls
+{
+    maxLocalCells 1000000;
+    maxGlobalCells 2000000;
+    minRefinementCells 10;
+    maxLoadUnbalance 0.10;
+    nCellsBetweenLevels 2;
+
+    features
+    (
+        // Sharp edges can be captured without explicit feature files at high refinement
+    );
+
+    refinementSurfaces
+    {
+        wing
+        {
+            // Surface refinement level: (min max)
+            level (5 6);
+            
+            // Limit cell size at the trailing edges
+            patchInfo
+            {
+                type wall;
+            }
+        }
+    }
+
+    resolveFeatureAngle 30;
+
+    refinementRegions
+    {
+        refinementBox
+        {
+            mode inside;
+            levels ((1.0 4)); // Level 4 inside the near box
+        }
+        wakeBox
+        {
+            mode inside;
+            levels ((1.0 2)); // Level 2 inside the wake box
+        }
+    }
+
+    // A point inside the flow domain but outside the wing surface
+    locationInMesh (-2.0 0.0 0.0);
+
+    allowFreeStandingZoneFaces true;
+}
+
+snapControls
+{
+    nSolveIter 30;
+    tolerance 2.0;
+    nSmoothPatch 3;
+    nSnapIter 5;
+    nFeatureSnapIter 10;
+    implicitFeatureSnap true;
+    explicitFeatureSnap false;
+    multiRegionFeatureSnap false;
+}
+
+addLayersControls
+{
+}
+
+meshQualityControls
+{
+    maxNonOrtho 65;
+    maxBoundarySkewness 20;
+    maxInternalSkewness 4;
+    maxConcave 80;
+    minVol 1e-13;
+    minTetDecalage 1e-30;
+    minArea -1;
+    minTwist 0.02;
+    minDeterminant 0.001;
+    minFaceWeight 0.02;
+    minVolRatio 0.01;
+    minTriangleTwist -1;
+    
+    // Relaxed quality controls to guarantee snapping
+    relaxed
+    {
+        maxNonOrtho 75;
+    }
+}
+
+writeFlags
+(
+    scalarLevels
+    layerSets
+);
+
+mergeTolerance 1e-6;
+
+// ************************************************************************* //

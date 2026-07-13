@@ -1,0 +1,93 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     simpleFoam;
+startFrom       startTime;
+startTime       0;
+stopAt          endTime;
+endTime         500;
+deltaT          1;
+writeControl    timeStep;
+writeInterval   100;
+purgeWrite      2;
+writeFormat     ascii;
+writePrecision  6;
+writeCompression off;
+timeFormat      general;
+timePrecision   6;
+runTimeModifiable true;
+
+functions
+{
+    forceCoeffs
+    {
+        type            forceCoeffs;
+        libs            (forces);
+        writeControl    timeStep;
+        writeInterval   1;
+        patches         (wing);
+        rho             rhoInf;      // For incompressible solver
+        rhoInf          1.0;         // Reference density
+        cofR            (0.4 0 0);   // Center of rotation (approx mid-chord)
+        dragDir         (1 0 0);     // Drag direction (flow direction)
+        liftDir         (0 1 0);     // Lift direction (vertical direction)
+        pitchAxis       (0 0 1);     // Pitch axis (spanwise direction)
+        magUInf         50.0;        // Reference velocity (inlet speed)
+        lRef            0.8;         // Reference length (wing chord)
+        Aref            0.08;        // Reference area (wing chord * span = 0.8 * 0.1)
+    }
+
+    sampleCp
+    {
+        type            surfaces;
+        libs            (sampling);
+        writeControl    writeTime;
+        surfaceFormat   vtk;
+        fields          (p);
+        surfaces
+        {
+            wingSurface
+            {
+                type        patch;
+                patches     (wing);
+                interpolate true;
+            }
+        }
+    }
+
+    sampleWake
+    {
+        type            sets;
+        libs            (sampling);
+        writeControl    writeTime;
+        interpolationScheme cellPoint;
+        setFormat       raw;
+        sets
+        (
+            wakeLine
+            {
+                type        uniform;
+                axis        y;
+                start       (1.5 -1.5 0);
+                end         (1.5  1.5 0);
+                nPoints     100;
+            }
+        );
+        fields          (U);
+    }
+}
+
+// ************************************************************************* //

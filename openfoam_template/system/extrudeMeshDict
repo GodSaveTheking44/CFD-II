@@ -1,0 +1,44 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      extrudeMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Construction model: construct from patch
+constructFrom patch;
+
+// Name of patch to extrude
+sourcePatches (frontPlane);
+
+// Name of patch on the other side of extrusion
+exposedPatchName backPlane;
+
+// Flip normals of the source patch
+flipNormals false;
+
+// Extrude model: linear direction
+extrudeModel linearDirection;
+
+// Number of layers in Z direction
+nLayers 1;
+
+// Expansion ratio
+expansionRatio 1.0;
+
+linearDirectionCoeffs
+{
+    direction (0 0 1);
+    thickness 0.1; // Domain thickness (z = -0.05 to 0.05)
+}
+
+// ************************************************************************* //
